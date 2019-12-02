@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Weather Update</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="container">
+	<div class="row justify-content-center mt-5">
+		<div class="col-md-8">
+			<div class="text-right">Last Update: <span id="datetime"></span></div>
+			<div class="card">
+			  <div class="card-body">
+				<h5 class="card-title mb-0"><span id="city_name"></span>, <span id="country"></span></h5>
+				  <div class="row">
+					  <div class="col-md-8">
+						  <h1 class="mb-0"><span id="icon"></span> <span id="temp"></span>&deg; C</h1>
+						  <span id="weather_des"></span>
+					  </div>
+					  <div class="col-md-4">
+						  <p class="card-text">
+							  Pressure: <span id="pressure"></span> hpa<br/>
+							  Humidity: <span id="humidity"></span> %<br/>
+							  clouds: <span id="clouds"></span> %<br/>
+							  wind: <span id="wind"></span> m/s<br/>
+						  </p>
+					  </div>
+				  </div>
+				  <div class="btn-group d-flex mt-4" role="group" aria-label="Basic example">
+					  <button type="button" class="btn btn-danger btn-outline-danger w-100">Max Temp: <span id="temp_max"></span>&deg; C</button>
+					  <button type="button" class="btn btn-outline-success w-100">Min Temp: <span id="temp_min"></span>&deg; C</button>
+				  </div>
+			  </div>
+			</div>
+			<div class="card mt-4">
+			  <div class="card-body">
+				  <div id="map"></div>
+			  </div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+<script>
+(function() {
+
+  var apiURL = "myweather.json";
+  $.getJSON( apiURL, {
+    format: "json"
+  }).done(function( data ) {
+      $.each( data.list, function( index, forecast ) {
+
+          var dt_txt = new Date(forecast.dt_txt);
+
+        if ( dt_txt.getHours() === (new Date).getHours() ) {
+
+            var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+            var hours  = dt_txt.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+            var datetime = dt_txt.getFullYear()+'-'+dt_txt.getMonth()+'-'+dt_txt.getDate() +' '+ weekday[dt_txt.getDay()] +' '+ hours;
+            $("#datetime").text( datetime );
+
+            // weather
+            // c=K-273.15
+            var temp = Math.round(forecast.main.temp - 273.15);
+            var temp_min = Math.round(forecast.main.temp_min - 273.15);
+            var temp_max = Math.round(forecast.main.temp_max - 273.15);
+            $("#temp").text( temp );
+            $("#temp_min").text( temp_min );
+            $("#temp_max").text( temp_max );
+            $("#pressure").text( forecast.main.pressure );
+            $("#humidity").text( forecast.main.humidity );
+            $("#weather").text( forecast.weather[0].main );
+            $("#weather_des").text( forecast.weather[0].description );
+            $("#clouds").text( forecast.clouds.all );
+            $("#wind").text( forecast.wind.speed );
+
+            $( "<img>" ).attr( "src", 'http://openweathermap.org/img/wn/'+ forecast.weather[0].icon +'.png' ).appendTo( "#icon" );
+        }
+      });
+
+      $('#country').text( data.city.country );
+      $('#city_name').text( data.city.name );
+
+      var lat = data.city.coord.lat;
+      var lon = data.city.coord.lon;
+      var mapURL = "https://maps.google.com/maps?q="+lat+","+lon+"&hl=es;z=14&amp;output=embed";
+      $("#map").append('<iframe width="100%" height="190" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="'+mapURL+'"></iframe>');
+
+
+  }).fail(function( jqxhr, textStatus, error ) {
+    var err = textStatus + ", " + error;
+    console.log( "Request Failed: " + err );
+   });
+
+})();
+</script>
+</body>
+</html>
